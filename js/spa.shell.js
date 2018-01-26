@@ -10,31 +10,36 @@ white  : true
 */
 /*global $, spa */
 spa.shell = (function () {
+  'use strict';
   //---------------- BEGIN MODULE SCOPE VARIABLES --------------
   var
   configMap = {
     anchor_schema_map : {
-      chat : { opened : true, closed : true }
+      chat  : { opened : true, closed : true }
     },
+    resize_interval : 200,
     main_html : String()
     + '<div class="spa-shell-head">'
-    + '<div class="spa-shell-head-logo"></div>'
-    + '<div class="spa-shell-head-acct"></div>'
-    + '<div class="spa-shell-head-search"></div>'
+    + '<div class="spa-shell-head-logo">'
+    + '<h1>SPA'
+    + '<p>javascript end to end'
+    + '</div>'
+    + '<div class="spa-shell-head-acct">'
+    + '</div>'
     + '</div>'
     + '<div class="spa-shell-main">'
     + '<div class="spa-shell-main-nav"></div>'
     + '<div class="spa-shell-main-content"></div>'
     + '</div>'
     + '<div class="spa-shell-foot"></div>'
-    + '<div class="spa-shell-modal"></div>',
-    resize_interval : 200,
+    + '<div class="spa-shell-modal"></div>'
   },
   stateMap  = { anchor_map : {} },
   jqueryMap = {},
-  copyAnchorMap, setJqueryMap,
-  changeAnchorPart, onHashchange, onResize,
-  setChatAnchor, initModule;
+  copyAnchorMap,    setJqueryMap,   changeAnchorPart,
+  onResize,         onHashchange,
+  onTapAcct,        onLogin,        onLogout,
+  setChatAnchor,    initModule;
   //----------------- END MODULE SCOPE VARIABLES ---------------
   //------------------- BEGIN UTILITY METHODS ------------------
   // Returns copy of stored anchor map; minimizes overhead
@@ -46,7 +51,11 @@ spa.shell = (function () {
   // Begin DOM method /setJqueryMap/
   setJqueryMap = function () {
     var $container = stateMap.$container;
-    jqueryMap = { $container : $container };
+    jqueryMap = {
+      $container : $container,
+      $acct      : $container.find('.spa-shell-head-acct'),
+      $nav       : $container.find('.spa-shell-main-nav')
+    };
   };
   // End DOM method /setJqueryMap/
   // Begin DOM method /changeAnchorPart/
@@ -183,6 +192,27 @@ spa.shell = (function () {
     return true;
   };
   // End Event handler /onResize/
+  onTapAcct = function ( event ) {	 // eslint-disable-line no-unused-vars
+    console.log('onTapAcct');
+    var acct_text, user_name, user = spa.model.people.get_user(); // eslint-disable-line no-unused-vars
+    if ( user.get_is_anon() ) {
+      user_name = prompt( 'Please sign-in' );
+      spa.model.people.login( user_name );
+      jqueryMap.$acct.text( '... processing ...' );
+    }
+    else {
+      spa.model.people.logout();
+    }
+    return false;
+  };
+
+  onLogin = function ( event, login_user ) {
+    jqueryMap.$acct.text( login_user.name );
+  };
+
+  onLogout = function ( event, logout_user ) {	 // eslint-disable-line no-unused-vars
+    jqueryMap.$acct.text( 'Please sign-in' );
+  };
   //-------------------- END EVENT HANDLERS --------------------
   //---------------------- BEGIN CALLBACKS ---------------------
   // Begin callback method /setChatAnchor/
@@ -226,6 +256,12 @@ spa.shell = (function () {
     stateMap.$container = $container;
     $container.html( configMap.main_html );
     setJqueryMap();
+    $.gevent.subscribe( $container, 'spa-login', onLogin );
+    $.gevent.subscribe( $container, 'spa-logout', onLogout );
+
+    jqueryMap.$acct.text( 'Please sign in');
+    jqueryMap.$acct.on( 'click', onTapAcct );
+    console.log('jqueryMap.$acct[0]:', jqueryMap.$acct[0]);
     // configure uriAnchor to use our schema
     $.uriAnchor.configModule({
       schema_map : configMap.anchor_schema_map
@@ -245,7 +281,7 @@ spa.shell = (function () {
     // is considered on-load
     //
     $(window)
-    .bind( 'resize', onResize )	
+    .bind( 'resize', onResize )
     .bind( 'hashchange', onHashchange )
     .trigger( 'hashchange' );
   };

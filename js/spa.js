@@ -1,25 +1,27 @@
 /*
- * spa.js
- * Root namespace module
+* spa.js
+* Root namespace module
 */
 
 /*jslint         browser : true, continue : true,
-  devel  : true,  indent : 2,     maxerr  : 50,
-  newcap : true,   nomen : true, plusplus : true,
-  regexp : true,  sloppy : true,     vars : false,
-  white  : true
+devel  : true,  indent : 2,     maxerr  : 50,
+newcap : true,   nomen : true, plusplus : true,
+regexp : true,  sloppy : true,     vars : false,
+white  : true
 */
 /*global $, spa */
 
 /*
- * spa.js
- * Root namespace module
+* spa.js
+* Root namespace module
 */
 
 /*global $, spa */
 var spa = (function () {
+  'use strict';
   var initModule = function ( $container ) {
-     spa.shell.initModule( $container );
+    spa.model.initModule();
+    spa.shell.initModule( $container );
   };
 
   return { initModule: initModule };
